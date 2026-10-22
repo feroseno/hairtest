@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>頭皮頭髮狀況評估｜暖弟</title>
+<style>
+:root{--bg:#fffbf5;--sf:#fff;--ink:#2b2118;--soft:#6b5a4a;--line:#e6cfa9;--ac:#ff8a3d;--ok:#2e9d6b;--warn:#e94a3a;--wbg:#fff0ee}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1510;--sf:#25201a;--ink:#f5ebdd;--soft:#c4b29e;--line:#4d4336;--wbg:#3a2220}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.7 "Noto Sans TC",system-ui,sans-serif;padding:env(safe-area-inset-top) 0 150px}
+#app{max-width:640px;margin:0 auto;padding:20px}
+h1{font-size:28px;line-height:1.35;margin:.4em 0}h2{font-size:25px;line-height:1.4;margin:.2em 0 .5em}h3{font-size:22px;margin:1.4em 0 .4em}
+.sub{color:var(--soft);font-size:18px}.bar{height:8px;background:var(--line);border-radius:9px;margin-bottom:22px}.bar i{display:block;height:100%;background:var(--ac);border-radius:9px}
+.o{display:flex;gap:14px;align-items:center;min-height:68px;padding:12px 16px;margin:12px 0;background:var(--sf);border:2px solid var(--line);border-radius:16px;cursor:pointer}
+.o i{flex:none;width:34px;height:34px;border:3px solid var(--soft);border-radius:9px;text-align:center;line-height:28px;color:#fff;font-style:normal;font-weight:700}
+.o.on{border-color:var(--ac)}.o.on i{background:var(--ac);border-color:var(--ac)}
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 20px calc(12px + env(safe-area-inset-bottom));display:flex;gap:12px;max-width:none}
+button,.btn{font:inherit;font-weight:700;border:0;border-radius:14px;min-height:60px;padding:0 20px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.nav .b{flex:1;background:var(--sf);color:var(--ink);border:2px solid var(--line)}.nav .n{flex:2;background:var(--ac);color:#fff}.nav button:disabled{opacity:.35}
+.card{background:var(--sf);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:12px 0}.card b{display:block}.card small{color:var(--soft);font-size:17px;display:block}
+.warn{background:var(--wbg);border:2px solid var(--warn);border-radius:16px;padding:14px 16px;margin:14px 0}
+.cta{background:var(--ok);color:#fff;width:100%;margin:14px 0;min-height:68px}.disc{font-size:17px;color:var(--soft);margin-top:24px}
+ul{padding-left:1.2em}li{margin:.3em 0}
+</style></head><body><div id="app"></div>
+<script>
+// ===== DATA：商品、題庫、文案（要改內容只改這區）=====
+const LINK='https://www.liqform.com/v/i6akn0yk';
+const P={
+S1:['natuur 頭皮油 NEEMAVERA 2% 30ml',1280,'打底：苦楝葉萃取，穩定頭皮紅癢出油。每週約 2 次，睡前擦隔天早上洗，或洗前按摩 15 分鐘'],
+S2:['脂質體 RCP 生髮精華 60ml',2480,'進攻：Redensyl＋Capixyl＋Procapil，負責生長訊號。早晚擦'],
+S3:['Koshine 0.9% 60ml',2200,'防禦：佔據 DHT 受體點位，降低毛囊被攻擊。早晚擦，可與 RCP 疊擦'],
+S4:['桉油醇迷迭香 洗髮精／潤髮乳／沐浴乳 500ml',1180,'幫助頭皮微循環'],
+N1:['鐵複合體 Ultra 14mg 60 顆',1780,'鐵是毛囊營養的運送車；每日安全建議劑量'],
+N2:['維生素 D 平衡系統複方（素食，含 K2）120 顆',1180,'D 是毛囊生長週期的開工指揮；每日安全建議劑量'],
+N3:['特殊型 B 群 血＆甲基優化 60 顆',1180,'協助血管、造血與髮根'],
+N4:['鋅 10mg／銅 1mg／錳 2mg 100 顆',1180,'鋅是生長工程師，10:1 銅比例避免失衡'],
+N5:['Biosil 正矽酸 液態膠囊 60 顆',1680,'加分題：讓頭髮較不容易斷'],
+N6:['igennus IFOS EPA 1000 魚油 60 顆',1980,'抗發炎；原文也說每週吃兩次鯖魚可取代']};
+const O=(...a)=>a.map(x=>x.split('|'));
+const Q=[
+{id:'q1',t:'你的生理性別？',o:O('m|男','f|女','x|不想說')},
+{id:'q2',t:'目前的狀態？',show:o=>(o.q1||[])[0]=='f',o:O('none|以上都沒有','preg|懷孕中','prep|備孕中','nurse|哺乳中','post|產後一年內，已停止哺乳')},
+{id:'q3',t:'拉髮實驗結果？',h:'測試前 24 小時不洗頭。抓 50～60 根頭髮，從髮根往髮尾輕拉，數掉下來幾根。建議換幾個位置測。',o:O('skip|還沒做／跳過','low|掉 6 根以下','white|掉超過 6 根，髮根端有白點','nowhite|掉超過 6 根，髮根端沒有白點')},
+{id:'q4',t:'掉髮或稀疏的樣子？（可複選）',m:1,ex:['F','G'],o:O('A|一塊一塊圓形光禿，邊界清楚','B|髮線後退、中分變寬、頭頂變稀、髮絲變細','C|掉髮量變多，但髮絲沒有變細','D|眉毛外側 1/3 變稀','E|只在綁髮或帽子拉扯處','F|沒有明顯落髮','G|不確定')},
+{id:'q5',t:'掉髮的時間？',o:O('sudden|最近 3 個月內突然開始（前 2–3 個月有生產、生病、壓力熬夜、節食）','over3|超過 3 個月','long|很久了，慢慢變多')},
+{id:'q6',t:'頭皮狀況？（可複選）',m:1,ex:['none'],o:O('red|紅','itch|癢','oily|出油','small|小片頭皮屑','big|大片頭皮屑','dry|乾、敏感','hard|偏硬、繃緊','none|都沒有')},
+{id:'q7',t:'醫師曾用放大鏡檢查，說你的毛囊已經消失了嗎？',h:'毛囊還有沒有，需要醫師用放大鏡判斷，本頁無法自行判斷。',o:O('no|沒有／沒檢查過','yes|是，醫師說已消失')},
+{id:'q8',t:'有被醫師診斷過或懷疑過？（可複選）',m:1,ex:['none'],o:O('thyroid|甲狀腺問題','pcos|多囊或胰島素阻抗','meno|更年期','anemia|貧血或缺鐵','alo|圓形禿（鬼剃頭）','none|都沒有')},
+{id:'q9',t:'鐵蛋白、維生素 D 驗過嗎？',o:O('normal|驗過，正常','low|驗過，偏低','none|沒驗過')},
+{id:'q10',t:'飲食狀況？（可複選）',m:1,ex:['ok'],o:O('lowprot|肉魚蛋豆吃不夠','veg|吃素','out|常外食','diet|節食或極端減肥','ok|都還好')},
+{id:'q11',t:'壓力與睡眠？（可複選）',m:1,ex:['none'],o:O('s1|睡醒還是累','s2|情緒耐受變低','s3|肚子變胖','s4|很想吃高熱量','s5|晚上醒、白天想睡','none|都沒有')},
+{id:'q12',t:'想順便了解洗護嗎？你的頭皮髮質偏哪種？',o:O('none|不用','oily|油頭','mild|中性、乾或敏感','coarse|粗硬髮','fine|細軟髮')}];
+const TT={
+X1:['建議先就醫評估','你勾選的狀況（圓形禿、甲狀腺相關或眉毛外側稀疏）建議先由醫師處理，不建議自行擦產品。'],
+X3:['毛囊可能已無法再生長','醫師確認毛囊已消失時，除洗髮精外，本團商品不建議購買，可評估植髮。'],
+T2a:['偏向慢性漸進型（DHT／纖維化），且頭皮有發炎','髮線或頭頂變細，頭皮又紅癢油：先打底穩定環境，再進攻與防禦。'],
+T2b:['偏向慢性漸進型（DHT／纖維化）','變細但頭皮不紅：進攻加防禦。'],
+T2c:['掉髮量變多，髮絲尚未變細','先進攻，並檢查營養基礎。'],
+T3:['偏向急性休止期落髮','事件後約 2–3 個月大量掉髮，常見於壓力、生產、生病、節食。'],
+T3a:['偏向生育型休止期落髮','懷孕時雌激素高，產後回到平常水平約第 3 個月掉一輪；營養充足下，停止哺乳後通常會恢復。'],
+T3b:['偏向壓力（皮質醇）型休止期落髮','先處理睡眠與壓力；頭皮紅油先打底穩定。'],
+T1:['偏向外力牽引型','綁髮、帽子等長期拉扯。把外力拿掉，有機會回來。'],
+T8:['偏向髮幹斷裂','掉下的頭髮沒有白點，代表是斷掉而不是自然落髮，重點在髮質養護。'],
+T7:['目前掉髮量在一般範圍','拉髮實驗 6 根以下，持續觀察即可。'],
+T5:['以頭皮狀況為主','先把頭皮環境穩定下來。'],
+T6:['資訊不足，無法歸類','建議重做一次，或請皮膚科、毛髮專科評估。']};
+
+// ===== ENGINE：規則（相同輸入必得相同結果）=====
+function walk(a){const o={},p=[];for(const q of Q){if(!q.show||q.show(o)){p.push(q);if(a[q.id])o[q.id]=a[q.id]}}return{p,o}}
+function ev(raw){
+const a=walk(raw).o,g=k=>a[k]||[],h=(k,v)=>g(k).includes(v);
+const r={ty:[],e1:[],e2:[],n1:[],n2:[],care:[],doc:[],tip:[],note:[]};
+const pg=['preg','prep','nurse'].some(v=>h('q2',v)),post=h('q2','post'),nurse=h('q2','nurse');
+const sp=(m=>m>=4&&m<=9)(new Date().getMonth()+1);
+const add=(k,...l)=>r.care.push(...l);
+const base=['洗髮精（無精油）500ml',840,'溫和弱酸性，無精油款'];
+if(h('q4','A')||h('q8','alo')||h('q8','thyroid')||(h('q4','D')&&h('q5','sudden'))){
+ r.ty=['X1'];
+ r.doc.push('圓形禿請掛皮膚科，不要自己硬擦東西刺激。');
+ r.doc.push('甲狀腺問題常伴隨外側 1/3 眉毛變稀，請至新陳代謝科或內分泌科檢查，先處理根本原因。');return r}
+if(h('q7','yes')){r.ty=['X3'];r.care=[base];return r}
+if(h('q4','D'))r.doc.push('眉毛外側 1/3 變稀可能與甲狀腺有關，建議抽血檢查。');
+const B=h('q4','B'),C=h('q4','C')&&!B,scalp=['red','itch','oily'].some(v=>h('q6',v));
+const cort=g('q11').filter(v=>v!='none').length>=3,sud=h('q5','sudden')||post;
+if(B||C)r.ty.push(B?(scalp?'T2a':'T2b'):'T2c');
+if(sud)r.ty.push(cort?'T3b':(post||nurse)?'T3a':'T3');
+if(h('q4','E'))r.ty.push('T1');
+if(h('q3','nowhite')&&!B&&!C)r.ty.push('T8');
+const anyScalp=scalp||['small','big','dry','hard'].some(v=>h('q6',v));
+if(!r.ty.length)r.ty.push((h('q3','low')||h('q4','F'))&&!anyScalp?'T7':anyScalp?'T5':'T6');
+const T=s=>r.ty.some(t=>t.startsWith(s));
+if(h('q3','white'))r.note.push('拉髮掉得偏多，但髮根端有白點，屬於正常週期落髮，建議持續觀察並做營養與頭皮的基礎。');
+if(h('q8','pcos')||h('q8','meno'))r.doc.push('荷爾蒙相關的掉髮建議同時諮詢婦產科或新陳代謝科；控制高升糖飲食、規律運動。外用的 Koshine 針對 DHT，可以搭配。');
+if(h('q8','anemia'))r.doc.push('已有貧血或缺鐵，鐵的補充請讓醫師依你的檢查值評估。');
+// 外用（最優先最多 3）
+if(scalp||T('T5'))r.e1.push('S1');
+if(T('T2')||T('T3b'))r.e1.push('S2');
+if((T('T2a')||T('T2b'))&&!pg)r.e1.push('S3');
+if((T('T2a')||T('T2b'))&&pg)r.note.push('Koshine 不影響 DHT 以外的荷爾蒙，但沒有做孕婦相關實驗，懷孕、備孕、哺乳期建議不要使用，官方也建議由醫師決定。孕婦雌激素本來就高，若真的掉髮，原因通常不是 DHT。');
+if(T('T2')&&!pg)r.e2.push('S4');
+if(pg&&r.e1.length)r.note.push('孕期、哺乳期使用外用產品前，建議先詢問醫師。');
+r.e2.push(...r.e1.splice(3));
+// 營養
+const hair=T('T2')||T('T3')||T('T8');
+if(hair){
+ const trig=sud||!h('q5','sudden')&&g('q5').length||g('q10').some(v=>v!='ok')||h('q9','low');
+ let t1=trig?['N1','N2','N4']:[],t2=trig?['N3','N6','N5']:['N1','N2','N4','N3','N6','N5'];
+ if(h('q9','normal')){t1=t1.filter(x=>x!='N1'&&x!='N2');t2=t2.filter(x=>x!='N1'&&x!='N2')}
+ if(h('q10','veg')){t1=t1.filter(x=>x!='N6');t2=t2.filter(x=>x!='N6')}
+ if(T('T8')){t1=['N5',...t1.filter(x=>x!='N5')];t2=t2.filter(x=>x!='N5')}
+ r.n1=t1.slice(0,3);r.n2=[...t1.slice(3),...t2];
+ r.tip.push('蛋白質是頭髮的基礎材料：每天吃「體重 kg × 1.2g」，肉魚蛋豆都可以，食量不好可搭配無添加蛋白粉。');
+ if(!h('q9','normal'))r.tip.push('鐵蛋白與維生素 D 約 1000 元可驗血；目標鐵蛋白 50–70 ng/mL、D 40–60 ng/mL。');
+}
+// 洗護
+if(pg)r.care=[base];else{
+ const c=[];
+ if(h('q6','small'))c.push(['埃及天竺葵潤髮乳 500ml',1180,'小片屑：當頭皮修護霜，倒尖頭瓶按摩 3–5 分鐘，停 2–3 分鐘再洗頭']);
+ if(h('q6','big'))c.push(['檸檬香桃木潤髮乳 500ml',1180,'大片屑：當頭皮修護霜，倒尖頭瓶按摩 3–5 分鐘，停 2–3 分鐘再洗頭']);
+ const k=g('q12')[0];
+ if(k=='oily')c.push(sp?['檸檬香桃木沐浴乳 500ml',1180,'春夏油頭：抗屑清爽；想更蓬鬆可改用無香沐浴乳（$840）洗頭']:['洗髮精 500ml＋潤髮乳 500ml',1680,'秋冬全部用洗髮精，潤髮乳必帶']);
+ if(k=='mild')c.push(['洗髮精（無香）500ml',840,'偏乾可混少量無香潤髮乳一起洗']);
+ if(k=='coarse')c.push(['洗髮精＋潤髮乳 各 500ml',1680,'先用潤髮乳按摩頭皮，再洗髮精，再潤髮一次，髮質更服貼']);
+ if(k=='fine')c.push(['洗髮精＋潤髮乳 各 500ml',1680,'細軟髮把洗髮精與潤髮乳混合使用，比較不打結']);
+ if(!c.length&&anyScalp)c.push(['洗髮精（無香）500ml',840,'溫和弱酸性，先穩定頭皮']);
+ r.care=c}
+// 免費行動
+if(T('T2'))r.tip.push('每天洗頭按摩（海葵、螃蟹、魟魚按摩法）；已明顯稀疏、頭皮偏硬可請醫師評估微針，研究有效且不過度傷害約 0.5mm，微針屬醫療器材，本團不販售。');
+if(T('T1'))r.tip.push('放鬆綁法、換寬鬆帽子、避免固定分線，先把拉扯拿掉。');
+if(T('T3b'))r.tip.push('先處理作息與放鬆，睡眠是交感神經降溫最直接的方法。');
+if(T('T8'))r.tip.push('髮質養護：使用潤髮乳，減少熱與拉扯。');
+if(hair)r.tip.push('血液流暢度：喝水充足、Zone 2 有氧、三溫暖、低溫烘焙可可、納豆。');
+r.hasN=r.n1.length+r.n2.length>0||hair;
+return r}
+
+// ===== UI =====
+const s={i:-1,a:{}},$=document.getElementById('app');
+const money=n=>'$'+n.toLocaleString();
+function T(id,v){const q=Q.find(x=>x.id==id);let c=s.a[id]||[];
+ if(!q.m)c=[v];else if((q.ex||[]).includes(v))c=[v];else{c=c.filter(x=>!(q.ex||[]).includes(x));c=c.includes(v)?c.filter(x=>x!=v):[...c,v]}
+ s.a[id]=c;draw()}
+function go(d){s.i+=d;window.scrollTo(0,0);draw()}
+function card(l){return `<div class="card"><b>${l[0]}　${money(l[1])}</b><small>${l[2]}</small></div>`}
+function pc(k){return card(P[k])}
+function result(){const r=ev(s.a),t=r.ty;
+ let h=`<div class="sub">你的評估結果</div>`;
+ t.forEach((k,i)=>h+=`<h1>${i?'同時可能：':''}${TT[k][0]}</h1><p>${TT[k][1]}</p>`);
+ r.doc.forEach(x=>h+=`<div class="warn">⚠️ ${x}</div>`);
+ r.note.forEach(x=>h+=`<p>${x}</p>`);
+ if(r.tip.length)h+=`<h3>你現在就能做的事</h3><ul>${r.tip.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+ if(r.e1.length||r.n1.length||r.care.length){h+=`<h3>建議優先考慮</h3>`;
+  r.e1.forEach(k=>h+=pc(k));r.n1.forEach(k=>h+=pc(k));}
+ if(r.care.length)h+=`<h3>洗護建議</h3>`+r.care.map(card).join('');
+ if(r.e2.length||r.n2.length){h+=`<h3>也可以考慮（加分）</h3>`;r.e2.forEach(k=>h+=pc(k));r.n2.forEach(k=>h+=pc(k))}
+ if(!r.e1.length&&!r.n1.length&&!r.care.length&&!r.e2.length&&!r.n2.length)h+=`<p>依你的回答，目前沒有適合直接推薦的商品。</p>`;
+ if(r.hasN)h+=`<p class="sub">補充品是每日安全建議劑量，不是高劑量，也不能取代正餐。納豆與魚油有抗凝血作用，服用抗凝血藥者請先詢問醫師。</p>`;
+ h+=`<p>本團建立在毛囊還有救的假設，毛囊是否還在，請醫師用放大鏡判斷。</p>
+ <a class="btn cta" href="${LINK}" target="_blank" rel="noopener">前往開團頁面</a>
+ <div class="disc">本頁僅為健康知識分享與自我評估問卷，不是醫療診斷或治療，也不能取代醫師。正在服藥或有慢性疾病者，使用任何保健食品前請先詢問醫師。</div>
+ <p><button class="b" style="width:100%;background:var(--sf);color:var(--ink);border:2px solid var(--line)" onclick="s.i=-1;s.a={};draw()">重新作答</button></p>`;
+ return h}
+function draw(){const w=walk(s.a),p=w.p;let h='',nav='';
+ if(s.i<0){h=`<h1>暖弟的頭皮頭髮狀況評估</h1><p>回答 10 題左右，每題勾選即可，我們依你的狀況整理建議，並告訴你哪些情況要先看醫生。</p><p class="sub">這是自我評估問卷，不是診斷或治療。答案只在你的手機上運算，不會被儲存或上傳。</p>`;
+  nav=`<button class="n" onclick="go(1)">開始</button>`}
+ else if(s.i>=p.length){h=result();nav=`<button class="b" onclick="go(-1)">上一題</button>`}
+ else{const q=p[s.i],c=s.a[q.id]||[];
+  h=`<div class="bar"><i style="width:${(s.i+1)/(p.length+1)*100}%"></i></div><div class="sub">第 ${s.i+1} 題</div><h2>${q.t}</h2>${q.h?`<p class="sub">${q.h}</p>`:''}`+
+  q.o.map(([v,l])=>`<div class="o ${c.includes(v)?'on':''}" onclick="T('${q.id}','${v}')"><i>${c.includes(v)?'✓':''}</i><span>${l}</span></div>`).join('');
+  nav=`<button class="b" onclick="go(-1)">上一題</button><button class="n" ${c.length?'':'disabled'} onclick="go(1)">${s.i==p.length-1?'看結果':'下一題'}</button>`}
+ $.innerHTML=h+`<div class="nav">${nav}</div>`}
+draw();
+</script></body></html>
